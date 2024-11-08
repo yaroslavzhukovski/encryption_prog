@@ -15,14 +15,14 @@ def save_key_mapping(filename, key):
     mappings = load_key_mappings()
     mappings[filename] = key.decode()  # Store the key as a string
     # Save updated mappings
-    with open(key_mapping_file, "w") as f:
-        json.dump(mappings, f)
+    with open(key_mapping_file, "w") as file:
+        json.dump(mappings, file)
 
 # Function to load key mappings from a JSON file
 def load_key_mappings():
     if os.path.exists(key_mapping_file):
-        with open(key_mapping_file, "r") as f:
-            return json.load(f)
+        with open(key_mapping_file, "r") as file:
+            return json.load(file)
     return {}
 
 # Function to encrypt a file
@@ -35,13 +35,13 @@ def encrypt_file():
     key = create_key()  # Create a unique key for this file
     fernet = Fernet(key)
     
-    with open(filename, "rb") as f:
-        data = f.read()
+    with open(filename, "rb") as file:
+        data = file.read()
     
     encrypted_data = fernet.encrypt(data)
     
-    with open(filename + "_encrypted", "wb") as f:
-        f.write(encrypted_data)
+    with open(filename + "_encrypted", "wb") as file:
+        file.write(encrypted_data)
 
     save_key_mapping(filename, key)  # Save the key mapping
     print(f"File encrypted and saved as {filename}_encrypted")
@@ -56,22 +56,23 @@ def decrypt_file():
     # Load the key mapping
     mappings = load_key_mappings()
     original_filename = filename.replace("_encrypted", "")  # Get the original filename
-    key_str = mappings.get(original_filename)
-
-    if key_str is None:
+    try:
+        key_str = mappings[original_filename]  # Försök att hämta nyckeln från ordboken
+    except KeyError:
         print(f"No key found for {original_filename}. Please ensure it has been encrypted.")
-        return  # Exit if no key is found
+        return  # Avsluta funktionen om nyckeln inte finns
+
 
     key = key_str.encode()  # Convert the key back to bytes
     fernet = Fernet(key)
 
-    with open(filename, "rb") as f:
-        encrypted_data = f.read()
+    with open(filename, "rb") as file:
+        encrypted_data = file.read()
 
     decrypted_data = fernet.decrypt(encrypted_data)
 
-    with open(original_filename + "_decrypted", "wb") as f:
-        f.write(decrypted_data)
+    with open(original_filename + "_decrypted", "wb") as file:
+        file.write(decrypted_data)
 
     print(f"File decrypted and saved as {original_filename}_decrypted")
 
